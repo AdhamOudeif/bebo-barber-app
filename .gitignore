@@ -1,0 +1,4 @@
+# Root-level ignores
+.DS_Store
+Thumbs.db
+node_modules/
