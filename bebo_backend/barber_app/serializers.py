@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Appointment, Service, User
+from .models import Appointment, Review, Service, User
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
@@ -15,3 +15,8 @@ class ServiceSerializer(serializers.ModelSerializer):
     class Meta:
         model = Service
         fields = '__all__'
+
+class ReviewSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Review
+        fields = ['id', 'appointment', 'client', 'barber', 'rating', 'feedback', 'created_at']

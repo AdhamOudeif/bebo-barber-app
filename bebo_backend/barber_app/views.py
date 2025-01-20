@@ -3,8 +3,8 @@ from django.shortcuts import render
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from .models import Appointment, Service, User
-from .serializers import AppointmentSerializer, ServiceSerializer, UserSerializer
+from .models import Appointment, Review, Service, User
+from .serializers import AppointmentSerializer, ReviewSerializer, ServiceSerializer, UserSerializer
 
 class UserListView(APIView):
     def get(self, request):
@@ -140,4 +140,59 @@ class ServiceDeleteView(APIView):
 
         service.delete()
         return Response({"message": "Service deleted successfully"}, status=status.HTTP_204_NO_CONTENT)
+    
+class ReviewCreateView(APIView):
+    def post(self, request):
+        serializer = ReviewSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class ReviewListView(APIView):
+    def get(self, request):
+        reviews = Review.objects.all()
+        barber_id = request.query_params.get('barber_id')
+        client_id = request.query_params.get('client_id')
+
+        if barber_id:
+            reviews = reviews.filter(barber_id=barber_id)
+        if client_id:
+            reviews = reviews.filter(client_id=client_id)
+
+        serializer = ReviewSerializer(reviews, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+class ReviewDetailView(APIView):
+    def get(self, request, pk):
+        try:
+            review = Review.objects.get(pk=pk)
+        except Review.DoesNotExist:
+            return Response({"error": "Review not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        serializer = ReviewSerializer(review)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+class ReviewUpdateView(APIView):
+    def put(self, request, pk):
+        try:
+            review = Review.objects.get(pk=pk)
+        except Review.DoesNotExist:
+            return Response({"error": "Review not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        serializer = ReviewSerializer(review, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class ReviewDeleteView(APIView):
+    def delete(self, request, pk):
+        try:
+            review = Review.objects.get(pk=pk)
+        except Review.DoesNotExist:
+            return Response({"error": "Review not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        review.delete()
+        return Response({"message": "Review deleted successfully"}, status=status.HTTP_204_NO_CONTENT)
 
