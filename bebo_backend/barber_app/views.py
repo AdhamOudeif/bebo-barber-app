@@ -140,6 +140,8 @@ class ServiceDeleteView(APIView):
 
         service.delete()
         return Response({"message": "Service deleted successfully"}, status=status.HTTP_204_NO_CONTENT)
+
+# Reviews CRUD Logic
     
 class ReviewCreateView(APIView):
     def post(self, request):
