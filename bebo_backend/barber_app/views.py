@@ -3,8 +3,13 @@ from django.shortcuts import render
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from .models import Appointment, Review, Service, User
+from django.views.decorators.csrf import csrf_exempt
+from django.http import JsonResponse
+
+from bebo_backend.bebo_backend import settings
+from .models import Appointment, Payment, Review, Service, User
 from .serializers import AppointmentSerializer, ReviewSerializer, ServiceSerializer, UserSerializer
+import stripe
 
 class UserListView(APIView):
     def get(self, request):
@@ -197,4 +202,65 @@ class ReviewDeleteView(APIView):
 
         review.delete()
         return Response({"message": "Review deleted successfully"}, status=status.HTTP_204_NO_CONTENT)
+    
+### PAYMENT LOGIC AND WEBHOOK
+stripe.api_key = settings.STRIPE_SECRET_KEY
+
+class CreatePaymentIntentView(APIView):
+    def post(self, request):
+        try:
+            appointment_id = request.data.get('appointment_id')
+            appointment = Appointment.objects.get(id=appointment_id)
+
+            amount = int(appointment.service.price * 100)  # Convert dollars to cents
+            intent = stripe.PaymentIntent.create(
+                amount=amount,
+                currency='usd',
+                payment_method_types=['card'],
+                metadata={'appointment_id': appointment.id}
+            )
+
+            payment = Payment.objects.create(
+                appointment=appointment,
+                client=appointment.client,
+                barber=appointment.barber,
+                amount=appointment.service.price,
+                payment_method='card',
+                payment_status='pending',
+                transaction_id=intent.id
+            )
+
+            return Response({
+                "client_secret": intent['client_secret'],
+                "payment_id": payment.id
+            }, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        
+@csrf_exempt
+def stripe_webhook(request):
+    payload = request.body
+    sig_header = request.META['HTTP_STRIPE_SIGNATURE']
+    event = None
+
+    try:
+        event = stripe.Webhook.construct_event(
+            payload, sig_header, settings.STRIPE_WEBHOOK_SECRET
+        )
+    except ValueError:
+        return JsonResponse({'error': 'Invalid payload'}, status=400)
+    except stripe.error.SignatureVerificationError:
+        return JsonResponse({'error': 'Invalid signature'}, status=400)
+
+    if event['type'] == 'payment_intent.succeeded':
+        intent = event['data']['object']
+        transaction_id = intent['id']
+        try:
+            payment = Payment.objects.get(transaction_id=transaction_id)
+            payment.payment_status = 'successful'
+            payment.save()
+        except Payment.DoesNotExist:
+            pass
+
+    return JsonResponse({'status': 'success'}, status=200)
 

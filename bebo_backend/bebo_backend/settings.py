@@ -27,6 +27,10 @@ DEBUG = True
 
 ALLOWED_HOSTS = []
 
+STRIPE_SECRET_KEY = 'your_secret_key'
+STRIPE_WEBHOOK_SECRET = 'your_webhook_secret'
+
+
 
 # Application definition
 

@@ -126,6 +126,31 @@ class Review(models.Model):
 
     def __str__(self):
         return f"Review by {self.client.name} for {self.barber.name}"
+    
+
+class Payment(models.Model):
+    PAYMENT_METHOD_CHOICES = [
+        ('card', 'Card'),
+        ('wallet', 'Wallet'),
+    ]
+    PAYMENT_STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('successful', 'Successful'),
+        ('failed', 'Failed'),
+    ]
+
+    appointment = models.OneToOneField(Appointment, on_delete=models.CASCADE)
+    client = models.ForeignKey(User, on_delete=models.CASCADE, related_name='client_payments')
+    barber = models.ForeignKey(User, on_delete=models.CASCADE, related_name='barber_payments')
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    payment_method = models.CharField(max_length=10, choices=PAYMENT_METHOD_CHOICES)
+    payment_status = models.CharField(max_length=10, choices=PAYMENT_STATUS_CHOICES, default='pending')
+    transaction_id = models.CharField(max_length=255, blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"Payment {self.id} - {self.payment_status}"
 
     
 
