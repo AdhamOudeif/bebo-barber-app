@@ -203,7 +203,7 @@ class ReviewDeleteView(APIView):
         review.delete()
         return Response({"message": "Review deleted successfully"}, status=status.HTTP_204_NO_CONTENT)
     
-### PAYMENT LOGIC AND WEBHOOK
+### PAYMENT LOGIC AND WEBHOOK - Needs Review and integration with stripe properly
 stripe.api_key = settings.STRIPE_SECRET_KEY
 
 class CreatePaymentIntentView(APIView):
