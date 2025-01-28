@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import AppointmentCreateView, AppointmentDeleteView, AppointmentDetailView, AppointmentListView, AppointmentUpdateView, ServiceCreateView, ServiceDeleteView, ServiceDetailView, ServiceListView, ServiceUpdateView, UserListView, UserCreateView, UserUpdateView, UserDeleteView
+from .views import AppointmentCreateView, AppointmentDeleteView, AppointmentDetailView, AppointmentListView, AppointmentUpdateView, CreatePaymentIntentView, ReviewCreateView, ReviewDeleteView, ReviewDetailView, ReviewListView, ReviewUpdateView, ServiceCreateView, ServiceDeleteView, ServiceDetailView, ServiceListView, ServiceUpdateView, UserListView, UserCreateView, UserUpdateView, UserDeleteView, stripe_webhook
 
 urlpatterns = [
     path('users/', UserListView.as_view(), name='user-list'),
@@ -16,4 +16,11 @@ urlpatterns = [
     path('services/<int:pk>/', ServiceDetailView.as_view(), name='service-detail'),
     path('services/update/<int:pk>/', ServiceUpdateView.as_view(), name='service-update'),
     path('services/delete/<int:pk>/', ServiceDeleteView.as_view(), name='service-delete'),
+    path('reviews/', ReviewListView.as_view(), name='review-list'),
+    path('reviews/create/', ReviewCreateView.as_view(), name='review-create'),
+    path('reviews/<int:pk>/', ReviewDetailView.as_view(), name='review-detail'),
+    path('reviews/<int:pk>/update/', ReviewUpdateView.as_view(), name='review-update'),
+    path('reviews/<int:pk>/delete/', ReviewDeleteView.as_view(), name='review-delete'),
+    path('payments/create-intent/', CreatePaymentIntentView.as_view(), name='create-payment-intent'),
+    path('payments/webhook/', stripe_webhook, name='stripe-webhook'),
 ]

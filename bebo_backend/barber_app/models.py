@@ -96,5 +96,61 @@ class Appointment(models.Model):
     
     class Meta:
         db_table = 'appointments'
+
+class Review(models.Model):
+    appointment = models.ForeignKey(
+        'barber_app.Appointment',  # Ensure this matches your app name
+        on_delete=models.CASCADE,
+        related_name='reviews'
+    )
+    client = models.ForeignKey(
+        'barber_app.User',
+        on_delete=models.CASCADE,
+        related_name='client_reviews',
+        limit_choices_to={"role": "client"}  # Limit to clients
+    )
+    barber = models.ForeignKey(
+        'barber_app.User',
+        on_delete=models.CASCADE,
+        related_name='barber_reviews',
+        limit_choices_to={"role": "barber"}  # Linked to barbers
+    )
+    rating = models.PositiveIntegerField(help_text="Rating between 1 and 5", default=5)
+    feedback = models.TextField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'review'
+        verbose_name = 'Review'
+        verbose_name_plural = 'Reviews'
+
+    def __str__(self):
+        return f"Review by {self.client.name} for {self.barber.name}"
+    
+
+class Payment(models.Model):
+    PAYMENT_METHOD_CHOICES = [
+        ('card', 'Card'),
+        ('wallet', 'Wallet'),
+    ]
+    PAYMENT_STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('successful', 'Successful'),
+        ('failed', 'Failed'),
+    ]
+
+    appointment = models.OneToOneField(Appointment, on_delete=models.CASCADE)
+    client = models.ForeignKey(User, on_delete=models.CASCADE, related_name='client_payments')
+    barber = models.ForeignKey(User, on_delete=models.CASCADE, related_name='barber_payments')
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    payment_method = models.CharField(max_length=10, choices=PAYMENT_METHOD_CHOICES)
+    payment_status = models.CharField(max_length=10, choices=PAYMENT_STATUS_CHOICES, default='pending')
+    transaction_id = models.CharField(max_length=255, blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"Payment {self.id} - {self.payment_status}"
+
     
 
